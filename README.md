@@ -1,3 +1,25 @@
+
+#Notes
+
+```javasscript
+
+// long 的编码被拆解成了 2 个 4bytes 的数字的组合, 塞入到buffer里边的
+  if (this._order === BIG_ENDIAN) {
+    this._bytes.writeInt32BE(value.high, highOffset);
+    this._bytes.writeInt32BE(value.low, lowOffset);
+  } else {
+    this._bytes.writeInt32LE(value.high, highOffset);
+    this._bytes.writeInt32LE(value.low, lowOffset);
+  }
+```
+
+
+
+
+
+
+
+
 byte
 =======
 
