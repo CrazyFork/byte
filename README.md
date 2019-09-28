@@ -7,6 +7,8 @@
 
 读这个库的起因还是由于公司用的node实现的hsf client底层用到了ta :( .
 
+`test/main.java` 演示了java端的bytes的encoding
+
 读这个库, 将收获到
 
 * 如何在网络中编码/解码 int/long/string 类型
