@@ -1,5 +1,64 @@
 
 #Notes
+这个库的主要作用是用作协议在网络里边的编码. 比如 js - java 之间的网络交流通信.
+其实如果简单来说一切都用json的str形式来就可以了. 但是就集团来说, 或者这个库的作者
+来说, 是为了追求编码/解码/网络带宽的效率. 所以采用了了这种形式.
+
+读这个库, 将收获到
+
+* 如何在网络中编码/解码 int/long/string 类型
+* 如何用CESU-8编码, 将js中的UTF-16字符编码转换成utf8兼容的编码格式的一个转换流程
+* 操作bytes和buffer
+
+## tips
+
+->  在理解下面这种转换, 用python脚本
+`this._bytes[index++] = (0xc0 + ((ch >> 6) & 0x1f)) >>> 32;`
+
+```python
+"{0:b}".format(0x3f)
+
+# output: 
+# '111111'
+```
+
+-> utf8 从bytes中读取
+
+```
+  return this._bytes.toString('utf8', index, index + length);
+```
+
+
+-> `_putString` 和 `putRawString` 的区别是啥呀?
+
+感觉从作用上来说都是往buffer中写入utf8 compatible 的 encoding. 为啥要写俩方法呀
+
+* `_putString` 
+  * node native 支持的, `Buffer.write(str, )` 就支持往 buffer 中 write utf8 encoded string. `this._bytes.write(value, valueOffset);`, 
+  * `_putString` 会在前面写个4 bytes 的int, __然后才是utf8真正的string? 为啥要这样呢?__
+
+  ```js
+  // :write a 4 bytes of int of index ?
+  this.putInt(index, length);
+  const valueOffset = index + 4;
+
+  if (isBuffer) {
+    value.copy(this._bytes, valueOffset);
+  } else {
+    this._bytes.write(value, valueOffset);
+  }
+
+  if (format === 'c') {
+    this.put(valueOffset + length, 0);
+  }
+  ```
+
+
+  -> egg-bin 看来是默认支持了 mocha 的 unit-test, 项目中啥配置也没有`"test": "npm run lint && egg-bin test",`
+
+
+
+# 其他
 
 ```javasscript
 
@@ -11,6 +70,18 @@
     this._bytes.writeInt32LE(value.high, highOffset);
     this._bytes.writeInt32LE(value.low, lowOffset);
   }
+
+
+
+// 从代码上来看是将 UTF-16 编码转换成了 UTF-8 相兼容的 CESU-8 的方式
+  // CESU-8 Bit Distribution
+  // @see http://www.unicode.org/reports/tr26/
+  //
+  // UTF-16 Code Unit                   | 1st Byte               | 2nd Byte               | 3rd Byte
+  // 000000000xxxxxxx (0x0000 ~ 0x007f) | 0xxxxxxx (0x00 ~ 0x7f) |                        |
+  // 00000yyyyyxxxxxx (0x0080 ~ 0x07ff) | 110yyyyy (0xc0 ~ 0xdf) | 10xxxxxx (0x80 ~ 0xbf) |
+  // zzzzyyyyyyxxxxxx (0x0800 ~ 0xffff) | 1110zzzz (0xe0 ~ 0xef) | 10yyyyyy (0x80 ~ 0xbf) | 10xxxxxx (0x80 ~ 0xbf)
+
 ```
 
 
